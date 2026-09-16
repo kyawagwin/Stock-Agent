@@ -12,6 +12,7 @@ The agent analyzes stock tickers over customizable timeframes by combining funda
 - **Statistical Volatility Band Projection**: Calculates annualized historical volatility and projects 1-standard-deviation ($\pm 1\sigma$) expected price moves.
 - **Fundamental Summary**: Retrieves market capitalization, sector classification, forward P/E ratios, and Wall Street consensus price targets.
 - **LangChain Tool-Calling Agent**: Integrates custom Python analytical tools into a structured reasoning loop backed by Google Gemini.
+- **Markdown Report Generation with Deduplication**: Automatically exports institutional research reports to a dedicated `reports/` folder, utilizing SHA-256 content hashing to avoid redundant duplicate files.
 
 ---
 
@@ -72,7 +73,8 @@ Or using the `.venv` Python executable:
 
 ```text
 stock-agent/
-├── main.py                     # Main agent script, tools definition, and prompt template
+├── main.py                     # Main agent script, tools, prompts, and report generator
+├── reports/                    # Generated Markdown analysis reports (deduplicated)
 ├── pyproject.toml              # Project metadata & dependencies
 ├── uv.lock                     # Lockfile for reproducible builds
 ├── .env                        # Local environment credentials (ignored by git)
@@ -90,3 +92,7 @@ stock-agent/
    - `calculate_volatility_bands`: Computes daily returns standard deviation and projects upper/lower bounds.
    - `get_company_summary`: Gathers sector, market cap, P/E ratio, and mean price targets.
 3. **Synthesis & Scenario Generation**: The Gemini model processes the tool outputs to generate an objective Bull, Base, and Bear range estimate along with key technical invalidation levels.
+4. **Markdown Export & Deduplication**:
+   - Formats the analysis with institutional metadata (Ticker, Timeframe, Date, Model).
+   - Computes a content hash to check if an identical report already exists in `reports/` (skips duplicate creation if unchanged).
+   - If market data or analysis changes on the same day, writes a versioned file (`_v2.md`) to preserve historical revisions.
