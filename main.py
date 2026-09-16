@@ -5,8 +5,7 @@ from dotenv import load_dotenv
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.tools import tool
-from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
-from langchain.agents import create_tool_calling_agent, AgentExecutor
+from langchain.agents import create_agent
 
 load_dotenv()
 
@@ -103,32 +102,45 @@ def get_company_summary(ticker: str) -> str:
 
 tools = [fetch_historical_metrics, calculate_volatility_bands, get_company_summary]
 
-prompt = ChatPromptTemplate.from_messages([
-    (
-        "system",
-        "You are an institutional quantitative equity research assistant. "
-        "Your task is to provide objective, range-based price estimation scenarios "
-        "for a given ticker and timeframe using tool outputs.\n\n"
-        "Guidelines:\n"
-        "1. Never guess single-point targets. Always compute bounded ranges (Bull, Base, Bear).\n"
-        "2. Ground your base target on moving averages, analyst consensus, and statistical bands.\n"
-        "3. Explicitly state the primary technical levels and catalysts that would invalidate the thesis."
-    ),
-    ("human", "Analyze ticker: {ticker} for the timeframe: {timeframe}."),
-    MessagesPlaceholder(variable_name="agent_scratchpad"),
-])
+SYSTEM_PROMPT = (
+    "You are an institutional quantitative equity research assistant. "
+    "Your task is to provide objective, range-based price estimation scenarios "
+    "for a given ticker and timeframe using tool outputs.\n\n"
+    "Guidelines:\n"
+    "1. Never guess single-point targets. Always compute bounded ranges (Bull, Base, Bear).\n"
+    "2. Ground your base target on moving averages, analyst consensus, and statistical bands.\n"
+    "3. Explicitly state the primary technical levels and catalysts that would invalidate the thesis."
+)
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.1)
+llm = ChatGoogleGenerativeAI(model="gemini-3.6-flash")
 
-agent = create_tool_calling_agent(llm, tools, prompt)
-agent_executor = AgentExecutor(agent=agent, tools=tools, verbose=True)
+agent = create_agent(
+    model=llm,
+    tools=tools,
+    system_prompt=SYSTEM_PROMPT,
+)
 
 # ==========================================
 # 3. Execution
 # ==========================================
 
 if __name__ == "__main__":
-    query = {"ticker": "NVDA", "timeframe": "30 days"}
-    response = agent_executor.invoke(query)
+    ticker = "NVDA"
+    timeframe = "30 days"
+    user_query = f"Analyze ticker: {ticker} for the timeframe: {timeframe}."
+    
+    print(f"Running quantitative analysis for {ticker} ({timeframe})...\n")
+    response = agent.invoke({"messages": [{"role": "user", "content": user_query}]})
+    
     print("\n--- Final Analysis ---")
-    print(response["output"])
+    final_message = response["messages"][-1]
+    if hasattr(final_message, "text") and final_message.text:
+        print(final_message.text)
+    elif isinstance(final_message.content, list):
+        for part in final_message.content:
+            if isinstance(part, dict) and "text" in part:
+                print(part["text"])
+            else:
+                print(part)
+    else:
+        print(final_message.content)

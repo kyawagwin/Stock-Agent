@@ -1,6 +1,6 @@
 # 📈 Quantitative Stock Research Agent (`stock-agent`)
 
-An institutional quantitative equity research assistant powered by **LangChain** and **Google Gemini (`gemini-2.5-flash`)**. 
+An institutional quantitative equity research assistant powered by **LangChain** and **Google Gemini (`gemini-3.6-flash`)**. 
 
 The agent analyzes stock tickers over customizable timeframes by combining fundamental data, simple moving averages (SMA), 52-week price extremes, and 1-sigma historical volatility price projections to generate objective, range-based market scenario analysis (Bull, Base, Bear).
 
@@ -17,8 +17,8 @@ The agent analyzes stock tickers over customizable timeframes by combining funda
 
 ## 🛠️ Technology Stack
 
-- **LLM**: Google Gemini (`gemini-2.5-flash`) via `langchain-google-genai`
-- **Agent Framework**: `langchain` tool-calling agent & `AgentExecutor`
+- **LLM**: Google Gemini (`gemini-3.6-flash`) via `langchain-google-genai`
+- **Agent Framework**: `langchain.agents.create_agent`
 - **Market & Financial Data**: `yfinance`, `numpy`, `pandas`
 - **Environment & Package Management**: `uv`, `python-dotenv`
 
