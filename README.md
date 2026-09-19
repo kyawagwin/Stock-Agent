@@ -1,18 +1,44 @@
-# 📈 Quantitative Stock Research Agent (`stock-agent`)
+# 📈 Institutional AI Stock Research & Decision Agents (`stock-agent`)
 
-An institutional quantitative equity research assistant powered by **LangChain** and **Google Gemini (`gemini-3.6-flash`)**. 
+A suite of institutional-grade financial analysis and capital allocation agents powered by **LangChain** and **Google Gemini (`gemini-3.6-flash`)**.
 
-The agent analyzes stock tickers over customizable timeframes by combining fundamental data, simple moving averages (SMA), 52-week price extremes, and 1-sigma historical volatility price projections to generate objective, range-based market scenario analysis (Bull, Base, Bear).
+---
+
+## 🤖 Available Agents
+
+The platform provides two specialized AI agents designed for distinct investment workflows:
+
+| Agent Script | Primary Focus | Key Output |
+| :--- | :--- | :--- |
+| **`main.py`** | **Market Research & Directional Bias** | Bullish / Bearish / Neutral bias, 1-$\sigma$ volatility bands, and scenario analysis (Bull, Base, Bear). |
+| **`decision_agent.py`** | **Investment Timing & Capital Allocation** | **"Invest Now vs. Invest Later"** verdict, tactical execution blueprint, ideal buy zones, stops, and risk-reward ratios. |
 
 ---
 
 ## ⚡ Key Features
 
-- **Automated Technical Metrics**: Fetches 50-day SMA, 200-day SMA, current market prices, and 52-week ranges via `yfinance`.
-- **Statistical Volatility Band Projection**: Calculates annualized historical volatility and projects 1-standard-deviation ($\pm 1\sigma$) expected price moves.
-- **Fundamental Summary**: Retrieves market capitalization, sector classification, forward P/E ratios, and Wall Street consensus price targets.
-- **LangChain Tool-Calling Agent**: Integrates custom Python analytical tools into a structured reasoning loop backed by Google Gemini.
-- **Markdown Report Generation with Deduplication**: Automatically exports institutional research reports to a dedicated `reports/` folder, utilizing SHA-256 content hashing to avoid redundant duplicate files.
+### 1. Investment Timing & Decision Agent (`decision_agent.py`)
+- **Institutional Decision Rubric**: Categorizes decisions into:
+  - `🟢 INVEST NOW (HIGH CONVICTION)`
+  - `🟡 INVEST NOW (TRANCHE / DCA)`
+  - `🟠 INVEST LATER (WAIT FOR PULLBACK / SUPPORT)`
+  - `🔵 INVEST LATER (WAIT FOR CATALYST / EARNINGS)`
+  - `🔴 AVOID / DO NOT INVEST`
+- **Tactical Execution Blueprint**: Concrete buy entry zone, profit target, invalidation stop-loss, and calculated Risk-to-Reward ratio.
+- **Quantitative Timing & Technical Structure**: Moving average extensions (20, 50, 200 SMA), 14-day RSI, MACD momentum expansion/contraction, Bollinger Bands (%B and bandwidth), 14-day ATR volatility buffer, and swing support/resistance levels.
+- **Valuation & Margin of Safety**: Trailing/Forward P/E, PEG ratio, P/S, EV/EBITDA, Free Cash Flow, ROE, and Wall Street consensus target spread.
+- **Event Risk & Binary Catalyst Detection**: Detects upcoming quarterly earnings release countdowns, ex-dividend dates, short interest % of float, and market beta.
+
+### 2. Market Research Agent (`main.py`)
+- **Automated Technical Indicators**: 50-day SMA, 200-day SMA, 14-day RSI, volume comparison vs 20-day average, and 52-week price range.
+- **Probabilistic Volatility Projections**: 1-sigma expected move upper and lower price bands over custom time horizons.
+- **Company Fundamental Profile**: Profit margins, revenue & earnings growth trends, and balance sheet cash flows.
+- **Scenario Analysis**: Bull, Base, and Bear probabilities and invalidation criteria.
+
+### 3. Institutional Reporting & SHA-256 Deduplication
+- **Markdown Export**: Saves structured institutional reports in `reports/` (e.g. `DECISION_NVDA_30_days_2026-09-17.md` and `NVDA_30_days_2026-09-16.md`).
+- **Content-Hash Deduplication**: SHA-256 hashing prevents redundant file creation when running repeated queries with unchanged market data.
+- **Revision Handling**: Gracefully versions same-day revisions (`_v2.md`) when underlying market indicators shift.
 
 ---
 
@@ -37,7 +63,6 @@ uv --version
 
 ### 2. Virtual Environment Setup
 
-Create and sync the virtual environment using `uv`:
 ```bash
 # Sync dependencies and create .venv
 uv sync
@@ -53,18 +78,16 @@ GEMINI_API_KEY="your-gemini-api-key-here"
 
 > 💡 *Note: You can acquire a Gemini API key from [Google AI Studio](https://aistudio.google.com/).*
 
-### 4. Run the Research Agent
+### 4. Run the Agents
 
-Execute the agent script directly:
-
+#### 🎯 Run the Investment Timing & Decision Agent ("Invest Now vs. Invest Later")
 ```bash
-uv run main.py
+uv run decision_agent.py
 ```
 
-Or using the `.venv` Python executable:
-
+#### 📊 Run the Market Research Agent (Directional Bias & Volatility Bands)
 ```bash
-.venv/bin/python main.py
+uv run main.py
 ```
 
 ---
@@ -73,8 +96,12 @@ Or using the `.venv` Python executable:
 
 ```text
 stock-agent/
-├── main.py                     # Main agent script, tools, prompts, and report generator
-├── reports/                    # Generated Markdown analysis reports (deduplicated)
+├── decision_agent.py           # Investment Timing & Decision Agent ('Invest Now vs Invest Later')
+├── main.py                     # Quantitative Stock Research & Volatility Agent
+├── reports/                    # Generated Markdown analysis and decision reports (deduplicated)
+│   ├── DECISION_NVDA_30_days_2026-09-17.md
+│   ├── DECISION_TSLA_14_days_2026-09-17.md
+│   └── NVDA_30_days_2026-09-16.md
 ├── pyproject.toml              # Project metadata & dependencies
 ├── uv.lock                     # Lockfile for reproducible builds
 ├── .env                        # Local environment credentials (ignored by git)
@@ -86,13 +113,8 @@ stock-agent/
 
 ## ⚙️ How It Works
 
-1. **Query Input**: The user inputs a ticker (e.g., `NVDA`) and a target horizon (e.g., `30 days`).
-2. **Tool Invocation**:
-   - `fetch_historical_metrics`: Pulls latest price, moving averages, and 52-week range.
-   - `calculate_volatility_bands`: Computes daily returns standard deviation and projects upper/lower bounds.
-   - `get_company_summary`: Gathers sector, market cap, P/E ratio, and mean price targets.
-3. **Synthesis & Scenario Generation**: The Gemini model processes the tool outputs to generate an objective Bull, Base, and Bear range estimate along with key technical invalidation levels.
-4. **Markdown Export & Deduplication**:
-   - Formats the analysis with institutional metadata (Ticker, Timeframe, Date, Model).
-   - Computes a content hash to check if an identical report already exists in `reports/` (skips duplicate creation if unchanged).
-   - If market data or analysis changes on the same day, writes a versioned file (`_v2.md`) to preserve historical revisions.
+1. **User Input**: Enter target ticker (e.g., `NVDA`, `TSLA`, `AAPL`) and timeframe (e.g., `14 days`, `1 month`, `6 months`, `1 year`).
+2. **Tool Invocation**: The agent autonomously queries specialized quantitative tools for technical structure, valuation, catalysts, and news sentiment.
+3. **Synthesis & Reasoning**: Gemini synthesizes the quantitative signals into a coherent investment thesis, evaluates the bear/bull balance, and issues a definitive recommendation.
+4. **Export & Storage**: Automatically compiles and saves a Markdown report with metadata, execution tables, and deduplication safeguards into `reports/`.
+

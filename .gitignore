@@ -15,3 +15,5 @@ wheels/
 
 # Reports
 reports/
+
+.DS_Store

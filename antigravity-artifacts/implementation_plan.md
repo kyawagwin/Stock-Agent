@@ -1,46 +1,93 @@
-# Implementation Plan: Export Analysis to Markdown with Deduplication
+# Implementation Plan: Investment Timing & Decision Agent ("Invest Now vs. Invest Later")
 
-This plan outlines the architecture and implementation for automatically saving the stock agent's final analysis into a dedicated reports folder as structured Markdown (`.md`) files while preventing redundant duplicates.
-
-## User Review Required
-
-> [!NOTE]
-> - **Default Output Directory**: Reports will be saved to `reports/` at the project root.
-> - **Deduplication Strategy**: 
->   1. **Content Hash Check**: Before saving, the file generator calculates the SHA-256 hash of the analysis body. If an identical report already exists in the destination folder, writing is skipped and the existing file path is reported.
->   2. **Version Suffixing for Changes**: If a report for the same ticker and date exists but has different content (e.g. new market data fetched later that day), a timestamp or version suffix (`_v2.md`) is added to avoid silently overwriting or duplicating identical files.
+Create a specialized AI-powered quantitative investment decision agent that evaluates whether an investor should **"Invest Now"** or **"Invest Later"** for a given stock ticker and specific investment timeframe.
 
 ---
 
-## Proposed Changes
+## 🎯 Architecture & Philosophy
 
-### Core Logic
+The agent solves the classic investor dilemma: *"Is this stock ripe for immediate capital allocation, or is the risk/reward skewed toward waiting for a pullback / catalyst confirmation?"*
 
-#### [MODIFY] [main.py](file:///Users/kyawagwin/Documents/GitHub/Stock-Agent/main.py)
-- Implement `extract_response_text(response: dict) -> str` to robustly extract final message text regardless of return format (attribute, part list, or string).
-- Implement `save_analysis_report(content: str, ticker: str, timeframe: str, output_dir: str = "reports") -> Path | None`:
-  - Builds a structured Markdown report with title, metadata banner (ticker, timeframe, timestamp, model info), and analysis body.
-  - Generates a normalized filename: `{TICKER}_{timeframe_slug}_{date}.md`.
-  - Performs SHA-256 content comparison against existing files in `reports/` to prevent duplicate files.
-  - If a file exists with different content, appends a version identifier (`_v2`, `_v3`, etc.) to preserve historical variations without spamming identical copies.
-- Update `if __name__ == "__main__":` to invoke `save_analysis_report(...)` and print the output path or deduplication status.
+### Institutional Decision Rubric:
+1. **Actionable Verdicts**:
+   - `🟢 INVEST NOW (HIGH CONVICTION)`: Favorable entry point, positive momentum, strong valuation support, no immediate binary risks.
+   - `🟡 INVEST NOW (TRANCHE / DCA)`: Long-term bullish thesis intact, but moderate short-term volatility. Recommend a phased entry (e.g. 30–50% initial allocation).
+   - `🟠 INVEST LATER (WAIT FOR PULLBACK / SUPPORT)`: Overbought / extended price action. Optimal entry limit zone specified (e.g. at 50-day SMA or key horizontal support).
+   - `🔵 INVEST LATER (WAIT FOR CATALYST / EARNINGS)`: Imminent binary risk (e.g. earnings in < 10 days, regulatory decision). Re-evaluate after risk event passes.
+   - `🔴 AVOID / DO NOT INVEST`: Unfavorable risk-to-reward ratio, deteriorating fundamentals, or broken technical structure.
 
----
-
-### Documentation & Repository Structure
-
-#### [MODIFY] [README.md](file:///Users/kyawagwin/Documents/GitHub/Stock-Agent/README.md)
-- Update the project structure diagram to include the `reports/` directory.
-- Add documentation on markdown export formatting and deduplication behavior.
+2. **Timeframe-Adaptive Reasoning**:
+   - **Short-Term (1–4 Weeks)**: Focuses on momentum, RSI, Bollinger Band %B, MACD histogram, distance from 20/50 SMA, and proximity to earnings dates.
+   - **Medium-Term (1–6 Months)**: Focuses on quarterly guidance, valuation multiples (Forward P/E, PEG), 50 vs 200 SMA trend structure, and Wall Street target consensus.
+   - **Long-Term (1–5 Years)**: Focuses on moat quality, Free Cash Flow yield, revenue/earnings CAGR, balance sheet health, and dollar-cost averaging zones.
 
 ---
 
-## Verification Plan
+## 🧩 Proposed Changes
 
-### Automated & Runtime Tests
-- Run `uv run main.py` for `NVDA` (`30 days`) to test initial markdown generation into `reports/NVDA_30days_YYYY-MM-DD.md`.
-- Run `uv run main.py` a second time with identical content (or a unit test script) to verify deduplication detects existing identical content and avoids creating a duplicate file.
-- Verify that running with modified content creates an appropriate versioned/updated file without data loss.
+### 1. New Decision Agent Module: `decision_agent.py`
 
-### Manual Verification
-- Inspect the generated markdown file in `reports/` to ensure headers, formatting, tables/lists, and markdown syntax render cleanly.
+#### [NEW] [`decision_agent.py`](file:///Users/kyawagwin/Documents/GitHub/Stock-Agent/decision_agent.py)
+
+Implement the standalone investment decision agent featuring:
+
+- **Custom Quantitative Tools**:
+  1. `analyze_timing_and_technical_structure(ticker: str, timeframe: str)`:
+     - Moving average extension (% above/below 20, 50, 200 SMA).
+     - 14-day RSI (overbought / oversold detection).
+     - MACD (12, 26, 9) and histogram expansion/contraction.
+     - Bollinger Bands (20-day, 2σ) position & bandwidth.
+     - Key Support levels (S1, S2, S3) and Resistance levels (R1, R2).
+     - 14-day Average True Range (ATR) for volatility risk buffer.
+     - Robust data cleaning (`.dropna(subset=['Close'])`) to prevent NaN edge cases.
+  2. `assess_valuation_and_margin_of_safety(ticker: str)`:
+     - Multiples: Trailing P/E, Forward P/E, PEG Ratio, Price/Sales, EV/EBITDA, Price/FCF.
+     - Financial Health: Operating Margin, ROE, Debt/Equity, Free Cash Flow.
+     - Wall Street consensus (Mean, High, Low target prices & recommendations) with calculated Upside/Downside spread.
+  3. `check_catalysts_and_risk_events(ticker: str)`:
+     - Next Earnings Date, Days until Earnings, Revenue & EPS consensus forecasts.
+     - Ex-Dividend Date & Dividend Yield.
+     - Short Interest (% of float) and Beta (systematic risk).
+  4. `fetch_sentiment_and_news_catalysts(ticker: str)`:
+     - News headlines, publisher info, summaries, and sentiment context.
+
+- **Institutional Decision System Prompt**:
+  - Requires explicit output sections:
+    - **Verdict & Conviction Level**
+    - **Execution Blueprint** (Optimal Buy Range, Upside Target, Invalidation / Stop-Loss Level, Risk/Reward Ratio)
+    - **Why Now vs. Why Later Thesis**
+    - **Timeframe Alignment & Catalysts Analysis**
+    - **Trigger Conditions to Flip / Invalidate Decision**
+
+- **Report Generation & Deduplication Engine**:
+  - Generates institutional Markdown reports in `reports/` prefixed with `DECISION_` (e.g. `DECISION_NVDA_30_days_2026-09-17.md`).
+  - Implements SHA-256 content deduplication and versioning.
+
+- **Interactive CLI & Direct Script Runner**:
+  - Interactive prompts for Ticker and Timeframe with smart defaults.
+
+---
+
+### 2. Documentation & Project Entry Points
+
+#### [MODIFY] [`README.md`](file:///Users/kyawagwin/Documents/GitHub/Stock-Agent/README.md)
+- Document both agents:
+  1. **Market Movement Research Agent** (`main.py`): Directional bias (Bullish/Bearish/Neutral).
+  2. **Investment Decision Agent** (`decision_agent.py`): Capital allocation timing (Invest Now vs. Invest Later).
+
+---
+
+## 🧪 Verification Plan
+
+### Automated & End-to-End Tests
+1. **Tool Unit Execution Test**:
+   - Run a test harness for all 4 tools against diverse tickers (`NVDA`, `AAPL`, `TSLA`, `MSFT`) to verify zero NaNs, correct data parsing, and graceful error handling when optional fields (like earnings dates) are missing.
+   - Command: `uv run python -c "..."`
+
+2. **Full Agent Run**:
+   - Execute `decision_agent.py` with both short-term (`14 days`) and long-term (`1 year`) timeframes to verify distinct decision reasoning.
+   - Command: `uv run decision_agent.py`
+
+3. **Report Generation & Deduplication Verification**:
+   - Verify report output in `reports/DECISION_...md`.
+   - Verify that running with identical results detects the existing report and prevents file duplication.
