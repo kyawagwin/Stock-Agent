@@ -435,7 +435,7 @@ def save_decision_report(
 # 4. Interactive Execution Runner
 # ==========================================================
 
-def run_decision_agent(ticker: str, timeframe: str):
+def run_decision_agent(ticker: str, timeframe: str, save_report: bool = True):
     """Executes the investment decision workflow for the given ticker and timeframe."""
     user_query = (
         f"Evaluate ticker: {ticker.upper()} for an investment timeframe of: {timeframe}. "
@@ -451,12 +451,14 @@ def run_decision_agent(ticker: str, timeframe: str):
     print("=" * 60 + "\n")
     print(analysis_text)
 
-    report_path, created = save_decision_report(analysis_text, ticker, timeframe)
-    if report_path:
-        if created:
-            print(f"\n✅ Investment Decision Report saved to: {report_path}")
-        else:
-            print(f"\nℹ️ Identical decision report already exists at: {report_path} (Skipped duplicate creation)")
+    report_path = None
+    if save_report:
+        report_path, created = save_decision_report(analysis_text, ticker, timeframe)
+        if report_path:
+            if created:
+                print(f"\n✅ Investment Decision Report saved to: {report_path}")
+            else:
+                print(f"\nℹ️ Identical decision report already exists at: {report_path} (Skipped duplicate creation)")
     return analysis_text, report_path
 
 

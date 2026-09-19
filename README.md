@@ -1,23 +1,41 @@
 # 📈 Institutional AI Stock Research & Decision Agents (`stock-agent`)
 
-A suite of institutional-grade financial analysis and capital allocation agents powered by **LangChain** and **Google Gemini (`gemini-3.6-flash`)**.
+A suite of institutional-grade financial analysis, forensic due diligence, and capital allocation agents powered by **LangChain** and **Google Gemini (`gemini-3.6-flash`)**.
 
 ---
 
-## 🤖 Available Agents
+## 🤖 Available Agents & Pipelines
 
-The platform provides two specialized AI agents designed for distinct investment workflows:
+The platform provides a two-stage autonomous orchestration pipeline along with standalone specialized agents:
 
-| Agent Script | Primary Focus | Key Output |
+| Script | Primary Focus | Key Output |
 | :--- | :--- | :--- |
-| **`main.py`** | **Market Research & Directional Bias** | Bullish / Bearish / Neutral bias, 1-$\sigma$ volatility bands, and scenario analysis (Bull, Base, Bear). |
+| **`pipeline.py`** | **Two-Stage Institutional Diligence & Execution Pipeline** | **End-to-End Orchestrator**: Stage 1 Forensic Audit diagnoses natural horizon (`Long-Term`, `Short-Term`, `All-Weather`, or `Avoid`). If viable, automatically hands off to Stage 2 for tactical buy zones and stops. If toxic, short-circuits to protect capital. |
+| **`forensic_agent.py`** | **Forensic Due Diligence & Horizon Classification** | Split-adjusted 3-year share dilution CAGR, 12-month net insider conviction, solvency & cash runway, multi-year operating margin persistence, and beta/cyclicality audit. |
 | **`decision_agent.py`** | **Investment Timing & Capital Allocation** | **"Invest Now vs. Invest Later"** verdict, tactical execution blueprint, ideal buy zones, stops, and risk-reward ratios. |
+| **`main.py`** | **Market Research & Directional Bias** | Bullish / Bearish / Neutral bias, 1-$\sigma$ volatility bands, and scenario analysis (Bull, Base, Bear). |
 
 ---
 
 ## ⚡ Key Features
 
-### 1. Investment Timing & Decision Agent (`decision_agent.py`)
+### 1. Two-Stage Institutional Pipeline (`pipeline.py`)
+- **Zero-Guesswork Execution**: The user only provides the stock ticker; the system autonomously audits corporate financial health, determines the appropriate investment timeframe, and coordinates execution.
+- **Capital Preservation Short-Circuit**: If an asset fails fundamental forensic tests (predatory share dilution, debt distress, or cash burn), execution is immediately halted to prevent speculative capital destruction.
+- **Unified Institutional Dossier**: Exports a consolidated report combining forensic audit tables and tactical execution blueprints with SHA-256 deduplication.
+
+### 2. Forensic Due Diligence & Horizon Classifier (`forensic_agent.py`)
+- **Deterministic Horizon Rubric**:
+  - `🟢 LONG-TERM COMPOUNDER`: Sub-2.5% dilution/buybacks, fortress balance sheet (positive FCF), high operating margins (>15-20%), and strong economic moat. (Recommended Horizon: 1 to 3+ Years).
+  - `🟡 SHORT-TERM TACTICAL SWING`: Viable liquidity but elevated beta (>1.5), cyclical margins, or high multiple. (Recommended Horizon: 30 to 60 Days).
+  - `🟣 ALL-WEATHER / CORE ASSET`: World-class secular moat meeting all Long-Term criteria, combined with immediate technical entry setup.
+  - `🔴 AVOID / TOXIC`: Predatory dilution (>10-15% CAGR), sub-12-month cash runway, or collapsing unit economics. (Immediate Avoidance).
+- **Split-Adjusted Share Dilution**: Accurately handles stock splits (e.g. NVDA 10:1, TSLA 3:1) when measuring multi-year share count drift.
+- **Insider Conviction Screening**: Classifies SEC Form 4 filings into open-market cash buying vs. 10b5-1 executive selling.
+- **Solvency & Cash Runway Audit**: Evaluates Cash vs. Total Debt, current ratios, and calculates remaining operational months for cash-burning businesses.
+- **Margin Durability & Moat Tracking**: Evaluates multi-year progression of gross and operating margins.
+
+### 3. Investment Timing & Decision Agent (`decision_agent.py`)
 - **Institutional Decision Rubric**: Categorizes decisions into:
   - `🟢 INVEST NOW (HIGH CONVICTION)`
   - `🟡 INVEST NOW (TRANCHE / DCA)`
@@ -25,20 +43,15 @@ The platform provides two specialized AI agents designed for distinct investment
   - `🔵 INVEST LATER (WAIT FOR CATALYST / EARNINGS)`
   - `🔴 AVOID / DO NOT INVEST`
 - **Tactical Execution Blueprint**: Concrete buy entry zone, profit target, invalidation stop-loss, and calculated Risk-to-Reward ratio.
-- **Quantitative Timing & Technical Structure**: Moving average extensions (20, 50, 200 SMA), 14-day RSI, MACD momentum expansion/contraction, Bollinger Bands (%B and bandwidth), 14-day ATR volatility buffer, and swing support/resistance levels.
+- **Quantitative Timing & Technical Structure**: Moving average extensions (20, 50, 200 SMA), 14-day RSI, MACD momentum, Bollinger Bands (%B and bandwidth), 14-day ATR volatility buffer, and swing support/resistance levels.
 - **Valuation & Margin of Safety**: Trailing/Forward P/E, PEG ratio, P/S, EV/EBITDA, Free Cash Flow, ROE, and Wall Street consensus target spread.
 - **Event Risk & Binary Catalyst Detection**: Detects upcoming quarterly earnings release countdowns, ex-dividend dates, short interest % of float, and market beta.
 
-### 2. Market Research Agent (`main.py`)
+### 4. Market Research Agent (`main.py`)
 - **Automated Technical Indicators**: 50-day SMA, 200-day SMA, 14-day RSI, volume comparison vs 20-day average, and 52-week price range.
 - **Probabilistic Volatility Projections**: 1-sigma expected move upper and lower price bands over custom time horizons.
 - **Company Fundamental Profile**: Profit margins, revenue & earnings growth trends, and balance sheet cash flows.
 - **Scenario Analysis**: Bull, Base, and Bear probabilities and invalidation criteria.
-
-### 3. Institutional Reporting & SHA-256 Deduplication
-- **Markdown Export**: Saves structured institutional reports in `reports/` (e.g. `DECISION_NVDA_30_days_2026-09-17.md` and `NVDA_30_days_2026-09-16.md`).
-- **Content-Hash Deduplication**: SHA-256 hashing prevents redundant file creation when running repeated queries with unchanged market data.
-- **Revision Handling**: Gracefully versions same-day revisions (`_v2.md`) when underlying market indicators shift.
 
 ---
 
@@ -80,12 +93,23 @@ GEMINI_API_KEY="your-gemini-api-key-here"
 
 ### 4. Run the Agents
 
-#### 🎯 Run the Investment Timing & Decision Agent ("Invest Now vs. Invest Later")
+#### 🏛️ Master Pipeline: Autonomous Diligence & Execution (Recommended)
+```bash
+uv run pipeline.py
+```
+*Prompts for a ticker, performs the forensic audit, diagnoses the natural horizon, and automatically routes to Stage 2 for tactical execution levels.*
+
+#### 🔬 Run Standalone Forensic Due Diligence & Horizon Classifier
+```bash
+uv run forensic_agent.py
+```
+
+#### 🎯 Run Standalone Investment Timing & Decision Agent
 ```bash
 uv run decision_agent.py
 ```
 
-#### 📊 Run the Market Research Agent (Directional Bias & Volatility Bands)
+#### 📊 Run Standalone Market Research Agent
 ```bash
 uv run main.py
 ```
@@ -96,25 +120,16 @@ uv run main.py
 
 ```text
 stock-agent/
-├── decision_agent.py           # Investment Timing & Decision Agent ('Invest Now vs Invest Later')
-├── main.py                     # Quantitative Stock Research & Volatility Agent
-├── reports/                    # Generated Markdown analysis and decision reports (deduplicated)
-│   ├── DECISION_NVDA_30_days_2026-09-17.md
-│   ├── DECISION_TSLA_14_days_2026-09-17.md
-│   └── NVDA_30_days_2026-09-16.md
+├── pipeline.py                 # Master Orchestrator (Forensics -> Horizon -> Tactical Execution)
+├── forensic_agent.py           # Stage 1: Forensic Due Diligence & Horizon Classification Agent
+├── decision_agent.py           # Stage 2: Investment Timing & Tactical Decision Agent
+├── main.py                     # Market Research & Volatility Projections Agent
+├── reports/                    # Generated Markdown intelligence dossiers (SHA-256 deduplicated)
+│   ├── UNIFIED_NVDA_ALL_WEATHER_2026-09-19.md
+│   ├── UNIFIED_NKLA_AVOID_2026-09-19.md
+│   └── DECISION_NVDA_30_days_2026-09-17.md
 ├── pyproject.toml              # Project metadata & dependencies
 ├── uv.lock                     # Lockfile for reproducible builds
 ├── .env                        # Local environment credentials (ignored by git)
-├── .gitignore                  # Git ignore rules
-└── antigravity-artifacts/      # Execution walkthroughs and implementation plans
+└── openspec/                   # OpenSpec specifications and changes
 ```
-
----
-
-## ⚙️ How It Works
-
-1. **User Input**: Enter target ticker (e.g., `NVDA`, `TSLA`, `AAPL`) and timeframe (e.g., `14 days`, `1 month`, `6 months`, `1 year`).
-2. **Tool Invocation**: The agent autonomously queries specialized quantitative tools for technical structure, valuation, catalysts, and news sentiment.
-3. **Synthesis & Reasoning**: Gemini synthesizes the quantitative signals into a coherent investment thesis, evaluates the bear/bull balance, and issues a definitive recommendation.
-4. **Export & Storage**: Automatically compiles and saves a Markdown report with metadata, execution tables, and deduplication safeguards into `reports/`.
-
