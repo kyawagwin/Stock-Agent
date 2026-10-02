@@ -39,7 +39,6 @@ def analyze_timing_and_technical_structure(ticker: str, timeframe: str = "30 day
         close = hist["Close"]
         high = hist["High"]
         low = hist["Low"]
-        volume = hist["Volume"]
 
         current_price = close.iloc[-1]
 
@@ -87,7 +86,6 @@ def analyze_timing_and_technical_structure(ticker: str, timeframe: str = "30 day
         swing_high_60 = recent_60["High"].max()
         swing_low_60 = recent_60["Low"].min()
         high_52w = hist["High"].max()
-        low_52w = hist["Low"].min()
 
         # Overbought / Oversold Assessment
         if rsi_14 >= 70:
@@ -325,7 +323,7 @@ SYSTEM_PROMPT = (
     "- **Conditions to Exit/Invalidate:** [Exact triggers that invalidate the bullish case]"
 )
 
-MODEL_NAME = "gemini-3.6-flash"
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 llm = ChatGoogleGenerativeAI(model=MODEL_NAME)
 
 decision_agent = create_agent(

@@ -1,10 +1,9 @@
-import os
 import re
 import hashlib
 from datetime import datetime
 from pathlib import Path
 
-from forensic_agent import run_forensic_audit, save_forensic_report
+from forensic_agent import run_forensic_audit
 from decision_agent import run_decision_agent
 
 def compute_content_hash(text: str) -> str:
@@ -128,7 +127,7 @@ def run_pipeline(ticker: str, custom_timeframe_override: str | None = None) -> P
         )
     else:
         effective_timeframe = custom_timeframe_override if custom_timeframe_override else diagnosed_timeframe
-        print(f"\n✅ Asset Passed Forensic Gatekeeper. Forwarding to Stage 2...")
+        print("\n✅ Asset Passed Forensic Gatekeeper. Forwarding to Stage 2...")
         print(f"🎯 Execution Horizon Assigned: {effective_timeframe}\n")
 
         decision_text, _ = run_decision_agent(

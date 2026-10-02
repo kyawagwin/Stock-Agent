@@ -1,7 +1,7 @@
 import os
 import re
 import hashlib
-from datetime import datetime, date
+from datetime import datetime
 from pathlib import Path
 import yfinance as yf
 import numpy as np
@@ -412,7 +412,7 @@ SYSTEM_PROMPT = (
     "[Top 2-3 severe risks that could impair capital or break the business model]"
 )
 
-MODEL_NAME = "gemini-3.6-flash"
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 llm = ChatGoogleGenerativeAI(model=MODEL_NAME)
 
 forensic_agent = create_agent(

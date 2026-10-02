@@ -183,7 +183,7 @@ SYSTEM_PROMPT = (
     "- Analytical Conclusion"
 )
 
-MODEL_NAME = "gemini-3.6-flash"
+MODEL_NAME = os.getenv("GEMINI_MODEL", "gemini-3.8-flash")
 llm = ChatGoogleGenerativeAI(model=MODEL_NAME)
 
 agent = create_agent(

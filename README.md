@@ -1,6 +1,6 @@
 # 📈 Institutional AI Stock Research & Decision Agents (`stock-agent`)
 
-A suite of institutional-grade financial analysis, forensic due diligence, and capital allocation agents powered by **LangChain** and **Google Gemini (`gemini-3.6-flash`)**.
+A suite of institutional-grade financial analysis, forensic due diligence, and capital allocation agents powered by **LangChain** and **Google Gemini (`gemini-3.8-flash`)**.
 
 ---
 
@@ -57,7 +57,7 @@ The platform provides a two-stage autonomous orchestration pipeline along with s
 
 ## 🛠️ Technology Stack
 
-- **LLM**: Google Gemini (`gemini-3.6-flash`) via `langchain-google-genai`
+- **LLM**: Google Gemini (`gemini-3.8-flash`) via `langchain-google-genai`
 - **Agent Framework**: `langchain.agents.create_agent`
 - **Market & Financial Data**: `yfinance`, `numpy`, `pandas`
 - **Environment & Package Management**: `uv`, `python-dotenv`
@@ -87,6 +87,8 @@ Create or update the `.env` file in the project root with your Google Gemini API
 
 ```ini
 GEMINI_API_KEY="your-gemini-api-key-here"
+# Optional: override model (defaults to gemini-3.8-flash)
+# GEMINI_MODEL="gemini-3.8-flash"
 ```
 
 > 💡 *Note: You can acquire a Gemini API key from [Google AI Studio](https://aistudio.google.com/).*
